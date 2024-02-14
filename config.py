@@ -4,6 +4,8 @@ from typing import Optional, Any
 from json import load, dump
 from os.path import isfile
 
+pygame.init()
+
 
 class Config:
     # constants
@@ -21,6 +23,14 @@ class Config:
     # of hp_bar_fill colors (default (156, 198, 155), (189, 228, 168), (215, 242, 186))
     #
     color_themes = {
+        "dark_modern": {
+            "hallway": pygame.Color(40, 44, 52),
+            "background": pygame.Color(24, 26, 30),
+            "square": [
+                pygame.Color(0, 0, 0),  # not used
+            ]
+        },
+
         "dark": {
             "hallway": pygame.Color(214, 209, 205),
             "background": pygame.Color(60, 63, 65),
@@ -130,7 +140,7 @@ class Config:
     bounce_min_spacing: Optional[float] = 30
     square_speed: Optional[int] = 600
     volume: Optional[int] = 70
-    music_offset: Optional[int] = -300
+    music_offset: Optional[int] = 0
     direction_change_chance: Optional[int] = 30
     hp_drain_rate = 10
     theatre_mode = False
@@ -138,6 +148,8 @@ class Config:
     botplay = False
     fullscreen = True
     shader_file_name = "none.glsl"
+    do_color_bounce_pegs = False
+    do_particles_on_bounce = True
 
     # settings that are not configurable (yet)
     backtrack_chance: Optional[float] = 0.02
@@ -160,7 +172,15 @@ class Config:
     # keys to save and load
     save_attrs = ["theme", "seed", "camera_mode", "start_playing_delay", "max_notes", "bounce_min_spacing",
                   "square_speed", "volume", "music_offset", "direction_change_chance", "hp_drain_rate", "theatre_mode",
-                  "particle_trail", "shader_file_name", "botplay", "fullscreen"]
+                  "particle_trail", "shader_file_name", "do_color_bounce_pegs", "screen_width", "screen_height", "botplay", "fullscreen"]
+
+    # glow effect, for dark_modern only for now
+    square_glow = True
+    square_glow_duration = 0.8
+    glow_intensity = 15  # 1-40
+    square_min_glow = 7
+    border_color = pygame.Color(255, 255, 255)
+    glow_color = pygame.Color(255, 255, 255)
 
 
 def get_colors():
@@ -171,7 +191,7 @@ def save_to_file(dat: Optional[dict[str, Any]] = None):
     if dat is None:
         dat = {k: getattr(Config, k) for k in Config.save_attrs}
     with open("./assets/settings.json", "w") as f:
-        dump(dat, f)
+        dump(dat, f, indent=4)
 
 def is_botplay():
     return Config.botplay
@@ -184,7 +204,7 @@ def load_from_file():
                     setattr(Config, setting, data[setting])
         else:
             with open("./assets/settings.json", "w") as f:
-                f.write("{}")
+                f.write('{}')
     except Exception as e:
         print(f"Error: {e}")
 

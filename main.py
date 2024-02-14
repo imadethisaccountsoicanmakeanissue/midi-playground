@@ -6,23 +6,32 @@ from songselector import SongSelector
 from errorscreen import ErrorScreen
 from os import getcwd
 from config import save_to_file, load_from_file
+from platform import system as get_os
+from config import save_to_file
 import debuginfo
 import webbrowser
 import pygame
 from array import array
-from ctypes import windll
+
 
 def main():
     # patch to fix mouse on high dpi displays
-    windll.user32.SetProcessDPIAware()
+    if "Windows" in get_os():
+        from ctypes import windll
+        windll.user32.SetProcessDPIAware()
     # pygame and other boilerplate
     n_frames = 0
-    pygame.init()
     pygame.mixer.music.load("./assets/mainmenu.mp3")
-    pygame.mixer.music.set_volume(Config.volume/100)
+    pygame.mixer.music.set_volume(Config.volume / 100)
     pygame.mixer.music.play(loops=-1, start=2)
 
     clock = pygame.time.Clock()
+
+    flags = pygame.HWACCEL | pygame.HWSURFACE | pygame.OPENGL | pygame.DOUBLEBUF
+    flags |= pygame.FULLSCREEN
+    do_vsync = 1
+    if "Linux" in get_os():
+        do_vsync = 0  # otherwise error of "regular vsync for OpenGL not available" at least that's what i got under wsl
     # noinspection PyUnusedLocal
     options = None
     if not Config.fullscreen:
@@ -49,10 +58,10 @@ def main():
 
     quad_buffer = ctx.buffer(data=array('f', [
         # position, uv coords
-        -1.0, 1.0, 0.0, 0.0,   # topleft
-        1.0, 1.0, 1.0, 0.0,    # topright
+        -1.0, 1.0, 0.0, 0.0,  # topleft
+        1.0, 1.0, 1.0, 0.0,  # topright
         -1.0, -1.0, 0.0, 1.0,  # bottomleft
-        1.0, -1.0, 1.0, 1.0    # bottomright
+        1.0, -1.0, 1.0, 1.0  # bottomright
     ]))
 
     vert_shader = '''
@@ -93,8 +102,8 @@ def main():
         if Config.theme == "rainbow":
             to_set_as_rainbow = pygame.Color((0, 0, 0))
             to_set_as_rainbow2 = pygame.Color((0, 0, 0))
-            to_set_as_rainbow.hsva = (((pygame.time.get_ticks()/1000)*Config.rainbow_speed) % 360, 100, 75, 100)
-            to_set_as_rainbow2.hsva = ((((pygame.time.get_ticks()/1000)*Config.rainbow_speed)+180) % 360, 100, 75, 100)
+            to_set_as_rainbow.hsva = (((pygame.time.get_ticks() / 1000) * Config.rainbow_speed) % 360, 100, 75, 100)
+            to_set_as_rainbow2.hsva = ((((pygame.time.get_ticks() / 1000) * Config.rainbow_speed) + 180) % 360, 100, 75, 100)
             get_colors()["background"] = to_set_as_rainbow
             get_colors()["hallway"] = to_set_as_rainbow2
             get_colors()["square"][0] = to_set_as_rainbow
@@ -119,9 +128,9 @@ def main():
                     if song_selector.active:
                         song_selector.active = False
                         menu.active = True
-                        if song_selector.selected_index+1:
+                        if song_selector.selected_index + 1:
                             pygame.mixer.music.load("./assets/mainmenu.mp3")
-                            pygame.mixer.music.set_volume(Config.volume/100)
+                            pygame.mixer.music.set_volume(Config.volume / 100)
                             pygame.mixer.music.play(loops=-1, start=2)
                             song_selector.selected_index = -1
                         continue
@@ -129,7 +138,7 @@ def main():
                         game.active = False
                         song_selector.active = True
                         pygame.mixer.music.load("./assets/mainmenu.mp3")
-                        pygame.mixer.music.set_volume(Config.volume/100)
+                        pygame.mixer.music.set_volume(Config.volume / 100)
                         pygame.mixer.music.play(loops=-1, start=2)
                         song_selector.selected_index = -1
                         continue
@@ -167,9 +176,9 @@ def main():
             if song:
                 if isinstance(song, bool):
                     menu.active = True
-                    if song_selector.selected_index+1:
+                    if song_selector.selected_index + 1:
                         pygame.mixer.music.load("./assets/mainmenu.mp3")
-                        pygame.mixer.music.set_volume(Config.volume/100)
+                        pygame.mixer.music.set_volume(Config.volume / 100)
                         pygame.mixer.music.play(loops=-1, start=2)
                         song_selector.selected_index = -1
                     continue
@@ -185,7 +194,7 @@ def main():
                         game.active = False
                         song_selector.active = True
                     pygame.mixer.music.load("./assets/mainmenu.mp3")
-                    pygame.mixer.music.set_volume(Config.volume/100)
+                    pygame.mixer.music.set_volume(Config.volume / 100)
                     pygame.mixer.music.play(loops=-1, start=2)
 
             # handle config page events
@@ -207,7 +216,7 @@ def main():
 
         update_screen(screen, glsl_program, render_object)
 
-        Config.dt = clock.tick(FRAMERATE)/1000
+        Config.dt = clock.tick(FRAMERATE) / 1000
     pygame.quit()
     save_to_file()
 

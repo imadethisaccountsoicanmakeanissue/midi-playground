@@ -1,5 +1,4 @@
 # midi playground
-
 bouncing square video, FOSS edition (and gamified)
 
 ## development guide
@@ -30,6 +29,7 @@ see [docs/CREDITS.md](https://github.com/quasar098/midi-playground/blob/master/d
 - [TheCodingCrafter](https://github.com/TheCodingCrafter) - Themes + QOL
 - [PurpleJuiceBox](https://github.com/PurpleJuiceBox) - Reset to Default Button
 - [sled45](https://github.com/sled45) - Mouse fix for high DPI displays
+- [Times0](https://github.com/Times0) - `dark-modern` theme, Glowing, Colored pegs on bounce
 
 ## todo
 

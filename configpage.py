@@ -8,7 +8,7 @@ import webbrowser
 class ConfigPage:
     @property
     def made_with_pgui_rect(self):
-        return self.made_with_pgui_surf.get_rect(bottomleft=(30, Config.SCREEN_HEIGHT-30))
+        return self.made_with_pgui_surf.get_rect(bottomleft=(30, Config.SCREEN_HEIGHT - 30))
 
     def __init__(self):
         self.active = False
@@ -17,7 +17,7 @@ class ConfigPage:
         # pygame_gui stuff
         self.ui_manager = pgui.UIManager((Config.SCREEN_WIDTH, Config.SCREEN_HEIGHT))
         self.back_button = pgui.elements.UIButton(
-            relative_rect=pygame.Rect((Config.SCREEN_WIDTH-120, 30, 90, 30)),
+            relative_rect=pygame.Rect((Config.SCREEN_WIDTH - 120, 30, 90, 30)),
             text="Back",
             manager=self.ui_manager
         )
@@ -223,10 +223,34 @@ class ConfigPage:
 
 
 
+        self.s_do_bounce_color_pegs = pgui.elements.UIDropDownMenu(
+            ["Off", "On"],
+            relative_rect=pygame.Rect((930, 330, 300, 30)),
+            starting_option=["Off", "On"][int(Config.do_color_bounce_pegs)],
+            manager=self.ui_manager
+        )
+        self.s_do_bounce_color_pegs_label = pgui.elements.UILabel(
+            relative_rect=pygame.Rect((630, 330, 240, 30)),
+            text="Color Pegs on Bounce:",
+            manager=self.ui_manager
+        )
+
+        self.s_do_particles_on_bounce = pgui.elements.UIDropDownMenu(
+            ["Off", "On"],
+            relative_rect=pygame.Rect((930, 390, 300, 30)),
+            starting_option=["Off", "On"][int(Config.do_color_bounce_pegs)],
+            manager=self.ui_manager
+        )
+        self.s_do_particles_on_bounce_label = pgui.elements.UILabel(
+            relative_rect=pygame.Rect((630, 390, 240, 30)),
+            text="Particles on Bounce:",
+            manager=self.ui_manager
+        )
+
         # reset button
 
         self.s_reset_button = pgui.elements.UIButton(
-            relative_rect=pygame.Rect((Config.SCREEN_WIDTH-330, Config.SCREEN_HEIGHT-60, 300, 30)),
+            relative_rect=pygame.Rect((Config.SCREEN_WIDTH - 330, Config.SCREEN_HEIGHT - 60, 300, 30)),
             text="Reset to default",
             manager=self.ui_manager
         )
@@ -288,7 +312,7 @@ class ConfigPage:
                 self.s_game_volume.set_current_value(70)
                 self.s_game_volume_label.set_text(f"Music volume ({Config.volume}%):")
 
-                Config.music_offset = -300
+                Config.music_offset = 0
                 self.s_music_offset.set_current_value(-300)
                 self.s_music_offset_label.set_text(f"Music offset ({Config.music_offset}ms):")
 
@@ -312,6 +336,12 @@ class ConfigPage:
                 self.s_particle_trail.current_state.selected_option = "On"
                 self.s_particle_trail.current_state.start()
 
+                Config.do_color_bounce_pegs = False
+                self.s_do_bounce_color_pegs.selected_option = "Off",
+                self.s_do_bounce_color_pegs.current_state.finish()
+                self.s_do_bounce_color_pegs.current_state.selected_option = "Off"
+                self.s_do_bounce_color_pegs.current_state.start()
+
                 play_sound("wood.wav")
 
         if event.type == pgui.UI_DROP_DOWN_MENU_CHANGED:
@@ -321,15 +351,19 @@ class ConfigPage:
             if event.ui_element == self.s_color_theme:
                 Config.theme = event.text
             if event.ui_element == self.s_theatre_mode:
-                Config.theatre_mode = bool("fn".index(event.text[1]))
+                Config.theatre_mode = bool(["Off", "On"].index(event.text))
             if event.ui_element == self.s_particle_trail:
-                Config.particle_trail = bool("fn".index(event.text[1]))
+                Config.particle_trail = bool(["Off", "On"].index(event.text))
             if event.ui_element == self.s_shader:
                 Config.shader_file_name = event.text
             if event.ui_element == self.s_botplay:
                 Config.botplay = bool("fn".index(event.text[1]))
             if event.ui_element == self.s_fullscreen:
                 Config.fullscreen = bool("fn".index(event.text[1]))
+            if event.ui_element == self.s_do_bounce_color_pegs:
+                Config.do_color_bounce_pegs = bool(["Off", "On"].index(event.text))
+            if event.ui_element == self.s_do_particles_on_bounce:
+                Config.do_particles_on_bounce = bool(["Off", "On"].index(event.text))
 
         if event.type == pgui.UI_TEXT_ENTRY_CHANGED:
             if event.ui_element == self.s_seed:

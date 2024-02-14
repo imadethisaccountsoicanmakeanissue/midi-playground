@@ -7,7 +7,7 @@ class Particle:
     SPEED_VARIATION = 4
     SIZE_MIN = 7
     SIZE_MAX = 14
-    AGE_RATE = 10
+    AGE_RATE = 20
     SLOW_DOWN_RATE = 1.2
 
     def __init__(self, pos: list[float], delta: list[float], invert_color: bool = False):

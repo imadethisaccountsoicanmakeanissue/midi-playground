@@ -1,6 +1,3 @@
-import pymsgbox
-
-import debuginfo
 from utils import *
 import pygame
 from world import World
@@ -9,7 +6,6 @@ from camera import Camera
 from keystrokes import Keystrokes
 from particle import Particle
 from zipfile import ZipFile
-from hiticon import HitIcon, HitLevel
 
 
 class Game:
@@ -26,6 +22,7 @@ class Game:
         self.keystrokes = Keystrokes()
         self.misses = 0
         self.mouse_down = False
+        self.hitted_rectangles = []                           
 
     def start_song(self, screen: pygame.Surface):
         random.seed(Config.seed)
@@ -53,8 +50,8 @@ class Game:
             "Too large maps will crash the program, so try with some smaller ones first",
         ]
         for index, info_text in enumerate(information_texts):
-            rendered_text = get_font("./assets/poppins-regular.ttf", 24).render(info_text, True, (0, 0, 0))
-            screen.blit(rendered_text, (50, Config.SCREEN_HEIGHT/2+30*index))
+            rendered_text = get_font("./assets/poppins-regular.ttf", 24).render(info_text, True, get_colors()["hallway"])
+            screen.blit(rendered_text, (50, Config.SCREEN_HEIGHT / 2 + 30 * index))
         pygame.display.flip()
 
         def update_loading_screen(message: str):
@@ -131,11 +128,15 @@ class Game:
                 pygame.draw.rect(screen, get_colors()["hallway"], offsetted)
 
         # draw pegs
-        for bounce in self.world.rectangles:
-            offsetted = self.camera.offset(bounce)
+        for i, bounce_rect in enumerate(self.world.rectangles):
+            offsetted = self.camera.offset(bounce_rect)
+
             if offsetted.colliderect(screen_rect):
                 total_rects += 1
-                pygame.draw.rect(screen, get_colors()["background"], offsetted)
+                if Config.do_color_bounce_pegs and self.world.collision_times[i] < (self.world.time * 1000 + Config.music_offset - Config.start_playing_delay)/1000:
+                    pygame.draw.rect(screen, self.world.colors[i], offsetted)
+                else:
+                    pygame.draw.rect(screen, get_colors()["background"], offsetted)
 
         # particles
         for particle in self.world.particles:
@@ -187,12 +188,12 @@ class Game:
             if time_from_start < 0:
                 repr_time = f"{abs(int((time_from_start+0.065)*10)/10)}s"
                 countdown_surface = get_font("./assets/poppins-regular.ttf", 36).render(repr_time, True, (255, 255, 255))
-                screen.blit(countdown_surface, countdown_surface.get_rect(center=(Config.SCREEN_WIDTH/2, Config.SCREEN_HEIGHT/4)))
+                screen.blit(countdown_surface, countdown_surface.get_rect(center=(Config.SCREEN_WIDTH / 2, Config.SCREEN_HEIGHT / 4)))
             elif time_from_start < 0.5:
                 repr_zero = f"0.0s"
                 countdown_surface = get_font("./assets/poppins-regular.ttf", 36).render(repr_zero, True, (255, 255, 255))
                 countdown_surface.set_alpha((0.5-time_from_start)*2*255)
-                screen.blit(countdown_surface, countdown_surface.get_rect(center=(Config.SCREEN_WIDTH/2, Config.SCREEN_HEIGHT/4)))
+                screen.blit(countdown_surface, countdown_surface.get_rect(center=(Config.SCREEN_WIDTH / 2, Config.SCREEN_HEIGHT / 4)))
 
             # handle mouse clicks because self.handle_event doesn't get called for mouse clicks
             if pygame.mouse.get_pressed()[0] and not self.mouse_down:
@@ -243,9 +244,9 @@ class Game:
                 try_again_text = get_font("./assets/poppins-regular.ttf", 36).render("Press escape to go back.", True, (255, 255, 255))
                 acc_text = get_font("./assets/poppins-regular.ttf", 36).render(f"Accuracy: {acc}%", True, (255, 255, 255))
                 acct_text = get_font("./assets/poppins-regular.ttf", 36).render(f"Total Accuracy: {acct}%", True, (255, 255, 255))
-                screen.blit(try_again_text, try_again_text.get_rect(center=(Config.SCREEN_WIDTH/2, Config.SCREEN_HEIGHT/4)))
-                screen.blit(acc_text, acc_text.get_rect(center=(Config.SCREEN_WIDTH/2, Config.SCREEN_HEIGHT/4+50)))
-                screen.blit(acct_text, acct_text.get_rect(center=(Config.SCREEN_WIDTH/2, Config.SCREEN_HEIGHT/4+100)))
+                screen.blit(try_again_text, try_again_text.get_rect(center=(Config.SCREEN_WIDTH / 2, Config.SCREEN_HEIGHT / 4)))
+                screen.blit(acc_text, acc_text.get_rect(center=(Config.SCREEN_WIDTH / 2, Config.SCREEN_HEIGHT / 4 + 50)))
+                screen.blit(acct_text, acct_text.get_rect(center=(Config.SCREEN_WIDTH / 2, Config.SCREEN_HEIGHT / 4 + 100)))
 
         if not self.camera.locked_on_square:
             screen.blit(self.camera_ctrl_text, (10, 10))

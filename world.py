@@ -18,20 +18,27 @@ class World:
         self.start_time = 0
         self.time = 0
         self.rectangles: list[pygame.Rect] = []
+        self.collision_times: list[float] = []
         self.particles: list[Particle] = []
         self.timestamps = []
         self.square = Square()
+<<<<<<< HEAD
         
         self.scorekeeper = Scorekeeper(self, config.is_botplay())
+=======
+        self.scorekeeper = Scorekeeper(self)
+        self.colors = []           
+>>>>>>> 7f5d76402d991801012d91ac8a262b204126fe84
 
     def update_time(self) -> None:
         self.time = get_current_time() - self.start_time
 
-    def next_bounce(self) -> Bounce:
+    def get_next_bounce(self) -> Bounce:
+        """Also pops the bounce from the future_bounces list"""
         self.past_bounces.append(self.future_bounces.pop(0))
         return self.past_bounces[-1]
 
-    def add_particles(self, sp: list[float], sd: list[float]):
+    def add_bounce_particles(self, sp: list[float], sd: list[float]):
         for _ in range(Config.particle_amount):
             new = Particle([sp[0]+random.randint(-10, 10), sp[1]+random.randint(-10, 10)], sd)
             self.particles.append(new)
@@ -39,7 +46,7 @@ class World:
     def handle_bouncing(self, square: Square):
         if len(self.future_bounces):
             if (self.time * 1000 + Config.music_offset)/1000 > self.future_bounces[0].time:
-                current_bounce = self.next_bounce()
+                current_bounce = self.get_next_bounce()
                 before = square.dir.copy()
                 square.obey_bounce(current_bounce)
                 changed = square.dir.copy()
@@ -48,7 +55,8 @@ class World:
                         changed[_] = 0
                     else:
                         changed[_] = -changed[_]
-                self.add_particles(square.pos, changed)
+                if Config.do_particles_on_bounce:
+                    self.add_bounce_particles(square.pos, changed)
 
                 # stop square at end
                 if len(self.future_bounces) == 0:
@@ -59,7 +67,7 @@ class World:
         return self.scorekeeper.do_keypress(time_from_start, misses)
 
     def gen_future_bounces(self, _start_notes: list[tuple[int, int, int]], percent_update_callback):
-        """Recursive solution is necessary"""
+        """Recursive solution may be necessary"""
         total_notes = len(_start_notes)
         max_percent = 0
         path = []
@@ -165,7 +173,8 @@ class World:
 
         if self.future_bounces is False:
             raise MapLoadingFailureError("The map failed to generate because of the recursion function. " +
-                                         "If the midi has too many notes too close, it may not generate. Maybe try changing the square speed?")
+                                         "If the midi has too many notes too close, it may not generate. " +
+                                         "Maybe try changing the \"square speed\" or \"change dir chance\" in the config")
 
         if len(self.future_bounces) == 0:
             raise MapLoadingFailureError("Map safearea list empty. Please report to the github under the issues tab")
@@ -192,4 +201,8 @@ class World:
         safe_areas = safe_areas
 
         self.rectangles = [_fb.get_collision_rect() for _fb in self.future_bounces]
+        self.collision_times = [_fb.time for _fb in self.future_bounces]
+        
+        # Setting random colors for the generated pegs
+        self.colors = [random.choice([(224, 50, 50), (80, 210, 100), (230, 220, 50), (174, 170, 210), (245, 77, 247), (255, 153, 0)]) for _ in self.future_bounces]
         return safe_areas

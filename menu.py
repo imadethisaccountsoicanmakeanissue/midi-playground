@@ -1,8 +1,8 @@
-import pygame
 from particle import Particle
 from square import Square
 from utils import *
 from random import randint
+import pygame
 
 
 def draw_beveled_rectangle(surf: pygame.Surface, color: pygame.Color, rect: pygame.Rect) -> None:
@@ -30,7 +30,7 @@ class MenuOption:
             chopped = pygame.transform.chop(brighter_title_surface, pygame.Rect(0, 109 - _, 0, 600))
             shadow_surface.blit(chopped, (_, _))
 
-        self.surface = pygame.Surface((int(Config.SCREEN_WIDTH/2+300), self.HEIGHT+8), pygame.SRCALPHA)
+        self.surface = pygame.Surface((int(Config.SCREEN_WIDTH / 2 + 300), self.HEIGHT + 8), pygame.SRCALPHA)
         draw_beveled_rectangle(self.surface, self.color, pygame.Rect(4, 4, Config.SCREEN_WIDTH, MenuOption.HEIGHT))
         title_rect = title_surface.get_rect(midleft=self.surface.get_rect().midleft).move(50, 0)
         self.surface.blit(shadow_surface, shadow_surface.get_rect(midleft=title_rect.midleft).move(0, 9))
@@ -61,13 +61,20 @@ class Menu:
             MenuOption("Quit", pygame.Color(226, 109, 92))
         ]
         self.anim = 1
+        # note that there are spaces after each line of code in the marquee text
+        self.marquee_text = """Contributors: quasar098, TheCodingCrafter, PurpleJuiceBox, sled45, Times0. Just want to 
+watch the square and don't want to play the game? Turn on theatre mode in the config if that is the case. Interested in playing your 
+own song but don't know how? Check out docs/SONGS.md in the source code to learn how to add your own songs.""".replace("\n", '')
+        self.title_surf = get_font("./assets/poppins-regular.ttf", 72).render("midi-playground", True, get_colors()["hallway"])
+        self.marquee_surf = get_font("./assets/poppins-regular.ttf", 24).render(self.marquee_text, True, get_colors()["hallway"])
+        self.prev_active = True
         self.active = True
         self.square = Square(100, 320)
         self.particles: list[Particle] = []
 
     @property
     def screensaver_rect(self):
-        return pygame.Rect(0, 0, int(Config.SCREEN_WIDTH/2-100), Config.SCREEN_HEIGHT).inflate(-100, -100)
+        return pygame.Rect(0, 0, int(Config.SCREEN_WIDTH / 2 - 100), Config.SCREEN_HEIGHT).inflate(-100, -100)
 
     def draw(self, screen: pygame.Surface, n_frames: int):
         if self.active:
@@ -79,6 +86,11 @@ class Menu:
         self.anim = max(min(self.anim, 1), 0)
         if not self.anim:
             return
+
+        if self.active and not self.prev_active:
+            self.title_surf = get_font("./assets/poppins-regular.ttf", 72).render("midi-playground", True, get_colors()["hallway"])
+            self.marquee_surf = get_font("./assets/poppins-regular.ttf", 24).render(self.marquee_text, True, get_colors()["hallway"])
+        self.prev_active = self.active
 
         # interesting here
         if self.active:
@@ -123,6 +135,22 @@ class Menu:
                     new = Particle([sp[0]+randint(-10, 10), sp[1]+randint(-10, 10)], sd)
                     self.particles.append(new)
 
+        # title text
+        title_surf_loc_rect = self.title_surf.get_rect(midtop=(Config.SCREEN_WIDTH*3/4, 60))
+        self.title_surf.set_alpha(max(int(interpolate_fn(self.anim)*400-145), 0))
+        screen.blit(self.title_surf, title_surf_loc_rect)
+
+        # marquee text
+        time = pygame.time.get_ticks()
+        cropped_marquee = pygame.Surface((self.title_surf.get_width(), self.marquee_surf.get_height()), pygame.SRCALPHA)
+        draw_marquee_position = [self.title_surf.get_width()-time/5, 0]
+        while draw_marquee_position[0] < -self.marquee_surf.get_width():
+            draw_marquee_position[0] += self.marquee_surf.get_width()+self.title_surf.get_width()+10
+        cropped_marquee.blit(self.marquee_surf, draw_marquee_position)
+        cropped_marquee.set_alpha(max(int(interpolate_fn(self.anim)*400-145), 0))
+        screen.blit(cropped_marquee, cropped_marquee.get_rect(topleft=title_surf_loc_rect.bottomleft))
+
+        # options
         for index, option in enumerate(self.menu_options):
             y_value = index * (option.HEIGHT + option.SPACING) + 250
             # update the hover if completely active
