@@ -22,13 +22,9 @@ class World:
         self.particles: list[Particle] = []
         self.timestamps = []
         self.square = Square()
-<<<<<<< HEAD
         
         self.scorekeeper = Scorekeeper(self, config.is_botplay())
-=======
-        self.scorekeeper = Scorekeeper(self)
         self.colors = []           
->>>>>>> 7f5d76402d991801012d91ac8a262b204126fe84
 
     def update_time(self) -> None:
         self.time = get_current_time() - self.start_time
